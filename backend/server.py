@@ -2,20 +2,12 @@ from flask import Flask, jsonify, request, send_file
 from yt_dlp import YoutubeDL
 import os
 import logging
-import math
 
 app = Flask(__name__)
 app.logger.setLevel(logging.DEBUG)
 
 DOWNLOAD_FOLDER = 'downloads'
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
-
-def format_duration(seconds):
-    if not seconds:
-        return "0:00"
-    minutes = int(seconds) // 60
-    secs = int(seconds) % 60
-    return f"{minutes}:{secs:02}"
 
 @app.route('/')
 def home():
@@ -38,7 +30,8 @@ def search():
 
         ydl_opts = {
             'quiet': True,
-            'default_search': 'ytsearch10',
+            'extract_flat': 'in_playlist',
+            'default_search': 'ytsearch10:'
         }
 
         with YoutubeDL(ydl_opts) as ydl:
@@ -54,9 +47,9 @@ def search():
                 results.append({
                     'id': vid.get('id'),
                     'title': vid.get('title', 'Tanpa judul'),
-                    'url': vid.get('webpage_url'),
+                    'url': vid.get('url'),
                     'thumbnail': vid.get('thumbnails', [{}])[-1].get('url'),
-                    'duration': format_duration(vid.get('duration')),
+                    'duration': vid.get('duration_string', '0:00'),
                     'author': vid.get('uploader', 'Unknown')
                 })
 
@@ -95,7 +88,7 @@ def download():
                 filename = filename.rsplit('.', 1)[0] + '.mp3'
 
             app.logger.info(f"Berhasil didownload: {filename}")
-            return send_file(filename, as_attachment=True, download_name=os.path.basename(filename))
+            return send_file(filename, as_attachment=True)
 
     except Exception as e:
         app.logger.error(f"Download error: {str(e)}")
