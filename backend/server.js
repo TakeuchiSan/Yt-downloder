@@ -1,59 +1,46 @@
 const express = require('express');
-const { spawn } = require('child_process');
+const ytdl = require('ytdl-core');
+const cors = require('cors');
 const app = express();
-const PORT = 8080;
+const PORT = process.env.PORT || 5000;
 
+app.use(cors());
 app.use(express.json());
 
-// 1) Search endpoint
-app.get('/search', (req, res) => {
-  const query = req.query.q;
-  if (!query) return res.status(400).json({ error: 'Missing query parameter' });
+// Endpoint untuk mencari video
+app.get('/search', async (req, res) => {
+    const { url } = req.query;
+    if (!url) {
+        return res.status(400).send('URL is required');
+    }
 
-  const ytdlp = spawn('yt-dlp', [`ytsearch5:${query}`, '--skip-download', '--print-json']);
-  let output = '';
-
-  ytdlp.stdout.on('data', chunk => { output += chunk.toString(); });
-  ytdlp.stderr.on('data', err => console.error(`yt-dlp stderr: ${err}`));
-
-  ytdlp.on('close', code => {
-    if (code !== 0) return res.status(500).json({ error: `yt-dlp exited with code ${code}` });
-    const videos = output
-      .trim()
-      .split('\n')
-      .map(line => JSON.parse(line))
-      .map(v => ({
-        id: v.id,
-        title: v.title,
-        thumbnail: v.thumbnail,
-        url: v.webpage_url
-      }));
-    res.json(videos);
-  });
+    try {
+        const info = await ytdl.getInfo(url);
+        const formats = ytdl.filterFormats(info.formats, 'audioandvideo');
+        const results = formats.map(format => ({
+            title: info.videoDetails.title,
+            thumbnail: info.videoDetails.thumbnails[0].url,
+            url: format.url,
+            quality: format.qualityLabel,
+            type: format.mimeType.includes('audio') ? 'mp3' : 'mp4'
+        }));
+        res.json(results);
+    } catch (error) {
+        res.status(500).send('Error fetching video info');
+    }
 });
 
-// 2) Download MP4
-app.get('/download/mp4/:id', (req, res) => {
-  const id = req.params.id;
-  const url = `https://www.youtube.com/watch?v=${id}`;
-  const args = ['-f', 'best[ext=mp4]+bestaudio[ext=m4a]/best', '-o', '-', url];
-  const ytdlp = spawn('yt-dlp', args);
+// Endpoint untuk mendownload video
+app.get('/download', (req, res) => {
+    const { url } = req.query;
+    if (!url) {
+        return res.status(400).send('URL is required');
+    }
 
-  res.setHeader('Content-Disposition', `attachment; filename="${id}.mp4"`);
-  ytdlp.stdout.pipe(res);
-  ytdlp.stderr.on('data', err => console.error(`yt-dlp stderr: ${err}`));
+    res.header('Content-Disposition', 'attachment; filename="video.mp4"');
+    ytdl(url).pipe(res);
 });
 
-// 3) Download MP3
-app.get('/download/mp3/:id', (req, res) => {
-  const id = req.params.id;
-  const url = `https://www.youtube.com/watch?v=${id}`;
-  const args = ['-f', 'bestaudio', '--extract-audio', '--audio-format', 'mp3', '-o', '-', url];
-  const ytdlp = spawn('yt-dlp', args);
-
-  res.setHeader('Content-Disposition', `attachment; filename="${id}.mp3"`);
-  ytdlp.stdout.pipe(res);
-  ytdlp.stderr.on('data', err => console.error(`yt-dlp stderr: ${err}`));
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
 });
-
-app.listen(PORT, () => console.log(`🚀 Backend running on port ${PORT}`));
