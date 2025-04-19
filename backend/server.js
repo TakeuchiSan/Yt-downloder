@@ -1,125 +1,84 @@
 const express = require('express');
 const ytdl = require('ytdl-core');
-const ytsr = require('ytsr');
 const ffmpeg = require('fluent-ffmpeg');
-const ffmpegPath = require('ffmpeg-static');
 const fs = require('fs');
 const path = require('path');
-const cors = require('cors');
+const { exec } = require('child_process');
 const app = express();
 
-// Konfigurasi
-const PORT = process.env.PORT || 3001;
-const DOWNLOAD_FOLDER = path.join(__dirname, 'downloads');
-
-// Buat folder downloads jika belum ada
-if (!fs.existsSync(DOWNLOAD_FOLDER)) {
-    fs.mkdirSync(DOWNLOAD_FOLDER);
-}
+// Set EJS as view engine
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
 
 // Middleware
-app.use(cors());
-app.use(express.json());
+app.use(express.static('public'));
+app.use(express.urlencoded({ extended: true }));
 
-// Endpoint untuk pencarian YouTube
-app.get('/api/search', async (req, res) => {
-    try {
-        const { query } = req.query;
-        if (!query) {
-            return res.status(400).json({ error: 'Query pencarian diperlukan' });
-        }
-
-        const filters = await ytsr.getFilters(query);
-        const filter = filters.get('Type').get('Video');
-        const options = {
-            limit: 15, // Tampilkan 15 hasil
-            nextpageRef: filter.url
-        };
-
-        const searchResults = await ytsr(null, options);
-        
-        const videos = searchResults.items
-            .filter(item => item.type === 'video')
-            .map(item => ({
-                id: item.id,
-                title: item.title,
-                url: item.url,
-                thumbnail: item.bestThumbnail.url,
-                duration: item.duration,
-                author: item.author.name
-            }));
-
-        res.json(videos);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Gagal melakukan pencarian' });
-    }
+// Routes
+app.get('/', (req, res) => {
+    res.render('index');
 });
 
-// Endpoint untuk mendapatkan info video
-app.get('/api/video-info', async (req, res) => {
+app.post('/download', async (req, res) => {
     try {
-        const { url } = req.query;
-        if (!ytdl.validateURL(url)) {
-            return res.status(400).json({ error: 'URL YouTube tidak valid' });
-        }
-
-        const info = await ytdl.getInfo(url);
-        res.json({
-            title: info.videoDetails.title,
-            thumbnail: info.videoDetails.thumbnails[info.videoDetails.thumbnails.length - 1].url,
-            duration: info.videoDetails.lengthSeconds,
-            formats: info.formats.filter(f => f.hasVideo || f.hasAudio)
-        });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Gagal mendapatkan info video' });
-    }
-});
-
-// Endpoint untuk download
-app.get('/api/download', async (req, res) => {
-    try {
-        const { url, format } = req.query;
+        const videoUrl = req.body.url;
+        const format = req.body.format;
         
-        if (!ytdl.validateURL(url)) {
-            return res.status(400).json({ error: 'URL YouTube tidak valid' });
+        if (!ytdl.validateURL(videoUrl)) {
+            return res.status(400).send('URL YouTube tidak valid');
         }
 
-        const info = await ytdl.getInfo(url);
+        const info = await ytdl.getInfo(videoUrl);
         const title = info.videoDetails.title.replace(/[^\w\s]/gi, '');
-        const filePath = path.join(DOWNLOAD_FOLDER, `${title}.${format}`);
+        const tempPath = path.join(__dirname, 'temp', `${Date.now()}_${title.replace(/\s+/g, '_')}`);
+        const outputPath = path.join(__dirname, 'public', 'downloads', `${title}.${format}`);
+
+        // Create necessary directories if they don't exist
+        [path.join(__dirname, 'temp'), path.join(__dirname, 'public', 'downloads')].forEach(dir => {
+            if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+        });
 
         if (format === 'mp3') {
-            const audioStream = ytdl(url, { quality: 'highestaudio' });
+            // Download audio using child process
+            const audioStream = ytdl(videoUrl, { quality: 'highestaudio' });
+            const tempAudioPath = `${tempPath}.webm`;
             
-            ffmpeg(audioStream)
-                .setFfmpegPath(ffmpegPath)
-                .audioBitrate(128)
-                .save(filePath)
-                .on('end', () => {
-                    res.download(filePath, `${title}.mp3`, (err) => {
-                        if (err) console.error(err);
-                        fs.unlinkSync(filePath);
-                    });
+            audioStream.pipe(fs.createWriteStream(tempAudioPath))
+                .on('finish', () => {
+                    // Convert to MP3 using FFmpeg via child process
+                    exec(`ffmpeg -i "${tempAudioPath}" -vn -ab 128k -ar 44100 -y "${outputPath}"`, 
+                        (error) => {
+                            fs.unlinkSync(tempAudioPath);
+                            if (error) {
+                                console.error(error);
+                                return res.status(500).send('Gagal mengkonversi ke MP3');
+                            }
+                            res.download(outputPath, `${title}.mp3`, () => {
+                                fs.unlinkSync(outputPath);
+                            });
+                        }
+                    );
                 });
         } else {
-            const videoStream = ytdl(url, { quality: 'highest' });
-            videoStream.pipe(fs.createWriteStream(filePath))
+            // Download MP4 directly
+            const videoStream = ytdl(videoUrl, { quality: 'highest' });
+            videoStream.pipe(fs.createWriteStream(outputPath))
                 .on('finish', () => {
-                    res.download(filePath, `${title}.mp4`, (err) => {
-                        if (err) console.error(err);
-                        fs.unlinkSync(filePath);
+                    res.download(outputPath, `${title}.mp4`, () => {
+                        fs.unlinkSync(outputPath);
                     });
                 });
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Gagal mengunduh video' });
+        res.status(500).send('Terjadi kesalahan saat mengunduh video');
     }
 });
 
-// Jalankan server
+// Start server
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-    console.log(`Server backend berjalan di http://localhost:${PORT}`);
+    console.log(`Server berjalan di http://localhost:${PORT}`);
+    console.log('Pastikan FFmpeg terinstall di sistem Anda!');
+    console.log('Untuk Termux: pkg install ffmpeg');
 });
