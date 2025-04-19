@@ -6,7 +6,9 @@ const path = require('path');
 const { exec } = require('child_process');
 const app = express();
 
-// Set EJS as view engine
+// Tambahkan ini sebelum app.set('view engine')
+console.log('Views directory:', path.join(__dirname, 'views')); // Debug path
+
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
