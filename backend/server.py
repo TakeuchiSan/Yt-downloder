@@ -5,18 +5,13 @@ import os
 import logging
 from urllib.parse import unquote
 
-# Initialize Flask app
 app = Flask(__name__)
-CORS(app)  # Enable CORS
+CORS(app)  # Enable CORS for cross-origin requests
 app.logger.setLevel(logging.DEBUG)
 
 # Configuration
 DOWNLOAD_FOLDER = 'downloads'
 os.makedirs(DOWNLOAD_FOLDER, exist_ok=True)
-
-def sanitize_query(query):
-    """Sanitize search query"""
-    return unquote(query or '').strip()[:100]
 
 @app.route('/')
 def home():
@@ -31,15 +26,14 @@ def home():
 @app.route('/api/search')
 def search():
     try:
-        query = sanitize_query(request.args.get('q'))
-        
-        if len(query) < 2:
+        query = unquote(request.args.get('q', '')).strip()
+        if not query or len(query) < 2:
             return jsonify({
-                "error": "Query too short",
-                "solution": "Use at least 2 characters"
+                "error": "Parameter 'q' diperlukan (minimal 2 karakter)",
+                "solution": "Masukkan kata kunci yang valid"
             }), 400
 
-        app.logger.info(f"Searching: '{query}'")
+        app.logger.info(f"Mencari video: '{query}'")
 
         ydl_opts = {
             'quiet': True,
@@ -59,29 +53,31 @@ def search():
             
             if not info or not info.get('entries'):
                 return jsonify({
-                    "error": "No results found",
-                    "solution": "Try different keywords"
+                    "error": "Tidak ada hasil ditemukan",
+                    "solution": "Coba kata kunci lain atau periksa ejaan"
                 }), 404
 
             videos = []
             for vid in info['entries']:
-                if vid:
+                if vid:  # Filter None entries
                     videos.append({
                         'id': vid.get('id', ''),
-                        'title': vid.get('title', 'No Title'),
+                        'title': vid.get('title', 'Tanpa judul'),
                         'url': f"https://youtu.be/{vid.get('id')}",
                         'thumbnail': (vid.get('thumbnails') or [{}])[-1].get('url', ''),
                         'duration': vid.get('duration_string', '0:00'),
                         'author': vid.get('uploader', 'Unknown')
                     })
 
+            app.logger.info(f"Menemukan {len(videos)} hasil untuk '{query}'")
             return jsonify(videos)
 
     except Exception as e:
-        app.logger.error(f"Search Error: {str(e)}")
+        app.logger.error(f"Error Pencarian: {str(e)}")
         return jsonify({
-            "error": "Search failed",
-            "details": str(e)
+            "error": "Gagal memproses pencarian",
+            "details": str(e),
+            "solution": "Coba lagi dalam beberapa saat"
         }), 500
 
 @app.route('/api/download')
@@ -92,11 +88,11 @@ def download():
 
         if not url or not ('youtu.be' in url or 'youtube.com' in url):
             return jsonify({
-                "error": "Invalid URL",
-                "solution": "Use a valid YouTube URL"
+                "error": "URL YouTube tidak valid",
+                "solution": "Gunakan link YouTube yang benar"
             }), 400
 
-        app.logger.info(f"Downloading: {url} as {format.upper()}")
+        app.logger.info(f"Memulai download: {url} sebagai {format.upper()}")
 
         ydl_opts = {
             'format': 'bestaudio/best' if format == 'mp3' else 'best[ext=mp4]',
@@ -105,7 +101,8 @@ def download():
             'postprocessors': [{
                 'key': 'FFmpegExtractAudio',
                 'preferredcodec': 'mp3',
-            }] if format == 'mp3' else []
+            }] if format == 'mp3' else [],
+            'socket_timeout': 30
         }
 
         with YoutubeDL(ydl_opts) as ydl:
@@ -118,16 +115,22 @@ def download():
             return send_file(
                 filename,
                 as_attachment=True,
-                download_name=os.path.basename(filename)
+                download_name=os.path.basename(filename),
+                mimetype='audio/mpeg' if format == 'mp3' else 'video/mp4'
             )
 
     except Exception as e:
-        app.logger.error(f"Download Error: {str(e)}")
+        app.logger.error(f"Error Download: {str(e)}")
         return jsonify({
-            "error": "Download failed",
+            "error": "Gagal mengunduh",
             "details": str(e),
-            "solution": "Try another video or check connection"
+            "solution": "Coba video lain atau periksa koneksi"
         }), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=3001, debug=True, threaded=True)
+    app.run(
+        host='0.0.0.0',
+        port=3001,
+        debug=True,
+        threaded=True
+    )
