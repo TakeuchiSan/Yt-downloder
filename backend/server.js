@@ -7,6 +7,11 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
+// Rute untuk root URL
+app.get('/', (req, res) => {
+    res.send('YouTube Downloader API is running. Use /search to get video info.');
+});
+
 // Endpoint untuk mencari video
 app.get('/search', async (req, res) => {
     const { url } = req.query;
