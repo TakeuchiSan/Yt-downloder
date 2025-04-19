@@ -1,0 +1,12 @@
+{
+  "name": "yt-downloader-backend",
+  "version": "1.0.0",
+  "description": "YouTube MP4/MP3 downloader backend using yt-dlp",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
