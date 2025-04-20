@@ -17,31 +17,34 @@ HTML_TEMPLATE = '''
   <title>YouTube MP3/MP4 Downloader</title>
   <style>
     body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
-    .container { max-width: 800px; margin: auto; background: #fff; padding: 30px; border-radius: 12px;
+    .container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 12px;
                  box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     h1 { text-align: center; margin-bottom: 20px; color: #333; }
     input[type="text"] { width: 100%; box-sizing: border-box; padding: 15px; font-size: 16px;
-                           border: 1px solid #ccc; border-radius: 8px; margin-bottom: 5px; }
-    button { padding: 10px 18px; font-size: 16px; margin: 10px 0; border: none; border-radius: 8px;
+                           border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; }
+    button { padding: 12px 20px; font-size: 16px; margin: 10px 5px 15px 0; border: none; border-radius: 8px;
              background-color: #007bff; color: white; cursor: pointer; }
     button:hover { background-color: #0056b3; }
-    .video, .suggestion-video { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
-    .video { border-bottom: 1px solid #eee; padding-bottom: 10px; }
-    .thumbnail { width: 160px; border-radius: 6px; }
-    .suggestion-thumbnail { width: 120px; height: 90px; border-radius: 6px; }
+    .video, .suggestion-video { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 25px; }
+    .video { border-bottom: 1px solid #eee; padding-bottom: 15px; }
+    .thumbnail { width: 200px; height: 120px; border-radius: 6px; object-fit: cover; }
+    .suggestion-thumbnail { width: 200px; height: 120px; border-radius: 6px; object-fit: cover; }
     .info, .suggestion-info { flex: 1; }
-    .info strong, .suggestion-info strong { font-size: 18px; display: block; margin-bottom: 5px; }
-    .info em, .suggestion-info em { color: #777; font-size: 14px; }
+    .info strong, .suggestion-info strong { font-size: 20px; display: block; margin-bottom: 8px; color: #333; }
+    .info em, .suggestion-info em { color: #555; font-size: 16px; }
+    .info button, .suggestion-info button { margin-top: 8px; padding: 10px 18px; font-size: 15px; }
     .search-status { font-style: italic; color: #555; font-size: 16px;
                      animation: pulse 1.2s infinite; margin-top: 10px; }
-    .suggestions, .random-suggestions { border: 1px solid #ccc; padding: 10px; border-radius: 8px;
-                   background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 20px;
-                   max-height: 200px; overflow-y: auto; }
-    .suggestions div, #random-suggestions div { padding: 5px; cursor: pointer; }
-    .suggestions div:hover, #random-suggestions div:hover { background: #f1f1f1; }
-    #random-suggestions h2 { text-align: center; color: #333; margin-bottom: 10px; }
-    #load-more-btn { display: block; margin: 10px auto; }
     @keyframes pulse { 0% { opacity: 0.2; } 50% { opacity: 1; } 100% { opacity: 0.2; } }
+    .suggestions, .random-suggestions { border: 1px solid #ccc; padding: 15px; border-radius: 8px;
+                   background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 25px;
+                   max-height: 300px; overflow-y: auto; }
+    .suggestions div, #random-suggestions .suggestion-video { padding: 8px; cursor: pointer; }
+    .suggestions div:hover, #random-suggestions .suggestion-video:hover { background: #f1f1f1; }
+    #random-suggestions h2 { text-align: center; color: #333; margin-bottom: 15px; font-size: 24px; }
+    #load-more-btn { display: block; margin: 15px auto; padding: 10px 20px; font-size: 16px;
+                     background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; }
+    #load-more-btn:hover { background: #218838; }
   </style>
 </head>
 <body>
