@@ -43,58 +43,104 @@ HTML_TEMPLATE = '''
     .suggestions div { padding: 8px; cursor: pointer; }
     .suggestions div:hover { background: #f1f1f1; }
     
-    /* New Contact Info Styles */
+    /* New Horizontal Video Suggestions */
+    .video-suggestions {
+      margin-top: 30px;
+    }
+    .video-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+    .suggestion-card {
+      border: 1px solid #eee;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: transform 0.2s;
+    }
+    .suggestion-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    .suggestion-thumbnail {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+    }
+    .suggestion-details {
+      padding: 12px;
+    }
+    .suggestion-title {
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 5px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .suggestion-author {
+      font-size: 12px;
+      color: #666;
+      margin-bottom: 8px;
+    }
+    .suggestion-buttons {
+      display: flex;
+      gap: 8px;
+    }
+    .suggestion-buttons button {
+      flex: 1;
+      padding: 5px;
+      font-size: 12px;
+    }
+    
+    /* Contact Info Styles */
     .contact-section {
       margin-top: 40px;
       padding: 25px;
       background: #f8f9fa;
       border-radius: 10px;
-      text-align: center;
     }
     .contact-title {
       font-size: 18px;
       margin-bottom: 15px;
       color: #333;
       font-weight: 600;
+      text-align: center;
     }
     .contact-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 15px;
-      margin-top: 20px;
     }
     .contact-card {
       padding: 15px;
       background: white;
       border-radius: 8px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-      transition: transform 0.3s;
-    }
-    .contact-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
     .contact-icon {
       font-size: 24px;
       margin-bottom: 10px;
       color: #007bff;
+      text-align: center;
     }
     .contact-label {
       font-size: 14px;
       color: #666;
       margin-bottom: 5px;
+      text-align: center;
     }
     .contact-value {
       font-size: 16px;
       font-weight: 500;
       color: #333;
+      text-align: center;
     }
     .contact-link {
       color: inherit;
       text-decoration: none;
-    }
-    .contact-link:hover {
-      text-decoration: underline;
     }
   </style>
 </head>
@@ -107,6 +153,12 @@ HTML_TEMPLATE = '''
     <div id="suggestions" class="suggestions" style="display:none;"></div>
     <div id="results"></div>
 
+    <!-- Video Suggestions Section -->
+    <div class="video-suggestions">
+      <div class="video-grid" id="random-video-container"></div>
+    </div>
+
+    <!-- Contact Info Section -->
     <div class="contact-section">
       <div class="contact-title">Kontak Kami</div>
       <div class="contact-grid">
@@ -189,6 +241,38 @@ HTML_TEMPLATE = '''
       a.href = `/api/download?url=${encodeURIComponent(url)}&format=${fmt}`;
       a.click();
     }
+
+    // Load random suggestions on page load
+    async function loadRandomSuggestions() {
+      const container = document.getElementById('random-video-container');
+      try {
+        const res = await fetch('/api/random_suggestions');
+        const data = await res.json();
+        if (!res.ok) return;
+        
+        container.innerHTML = '';
+        data.forEach(video => {
+          const card = document.createElement('div');
+          card.className = 'suggestion-card';
+          card.innerHTML = `
+            <img class="suggestion-thumbnail" src="${video.thumbnail}" />
+            <div class="suggestion-details">
+              <div class="suggestion-title">${video.title}</div>
+              <div class="suggestion-author">${video.author}</div>
+              <div class="suggestion-buttons">
+                <button onclick="download('${video.url}','mp3')">MP3</button>
+                <button onclick="download('${video.url}','mp4')">MP4</button>
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (e) {
+        console.error('Error loading suggestions:', e);
+      }
+    }
+
+    window.onload = loadRandomSuggestions;
   </script>
 </body>
 </html>
@@ -209,6 +293,25 @@ def suggest():
         return jsonify(titles)
     except Exception as e:
         return jsonify({ 'error': str(e) }), 500
+
+@app.route('/api/random_suggestions')
+def random_suggestions():
+    try:
+        query = 'music'
+        ydl_opts = { 'quiet': True, 'extract_flat': 'in_playlist', 'default_search': 'ytsearch12:' }
+        with YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(query, download=False)
+            entries = info.get('entries',[]) or []
+            results = [
+                {'id': v.get('id'), 'title': v.get('title','Tanpa judul'),
+                 'url': v.get('url'), 'thumbnail': v.get('thumbnails',[{}])[-1].get('url'),
+                 'author': v.get('uploader','Unknown')} for v in entries if v
+            ]
+        random.shuffle(results)
+        return jsonify(results[:12])  # Return max 12 videos
+    except Exception as e:
+        app.logger.error(f"Error random: {e}")
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/search')
 def search():
