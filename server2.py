@@ -25,14 +25,14 @@ HTML_TEMPLATE = '''
     button { padding: 12px 20px; font-size: 16px; margin: 10px 5px 15px 0; border: none; border-radius: 8px;
              background-color: #007bff; color: white; cursor: pointer; }
     button:hover { background-color: #0056b3; }
-    .video, .suggestion-video { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 25px; }
+    .video, .suggestion-video { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
     .video { border-bottom: 1px solid #eee; padding-bottom: 15px; }
-    .thumbnail { width: 200px; height: 120px; border-radius: 6px; object-fit: cover; }
-    .suggestion-thumbnail { width: 200px; height: 150px; border-radius: 6px; object-fit: cover; }
+    .thumbnail { width: 160px; height: 90px; border-radius: 6px; object-fit: cover; }
+    .suggestion-thumbnail { width: 120px; height: 68px; border-radius: 6px; object-fit: cover; }
     .info, .suggestion-info { flex: 1; }
-    .info strong, .suggestion-info strong { font-size: 20px; display: block; margin-bottom: 8px; color: #333; }
-    .info em, .suggestion-info em { color: #555; font-size: 16px; }
-    .info button, .suggestion-info button { margin-top: 8px; padding: 10px 18px; font-size: 15px; }
+    .info strong, .suggestion-info strong { font-size: 18px; display: block; margin-bottom: 5px; color: #333; line-height: 1.3; }
+    .info em, .suggestion-info em { color: #555; font-size: 14px; display: block; margin-bottom: 8px; }
+    .info button, .suggestion-info button { padding: 8px 12px; font-size: 14px; margin-right: 8px; }
     .search-status { font-style: italic; color: #555; font-size: 16px;
                      animation: pulse 1.2s infinite; margin-top: 10px; }
     @keyframes pulse { 0% { opacity: 0.2; } 50% { opacity: 1; } 100% { opacity: 0.2; } }
@@ -48,16 +48,16 @@ HTML_TEMPLATE = '''
       background: #fff; 
       box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
       margin-top: 25px;
-      max-height: none; /* Menghilangkan batas tinggi */
+      max-height: none;
       overflow-y: auto; 
     }
     #random-suggestions h2 { text-align: center; color: #333; margin-bottom: 15px; font-size: 24px; }
     .suggestion-video { 
       display: flex; 
-      align-items: flex-start; 
-      gap: 15px; 
-      margin-bottom: 20px; 
-      padding: 12px; 
+      align-items: center; 
+      gap: 12px; 
+      margin-bottom: 12px; 
+      padding: 10px; 
       border-bottom: 1px solid #eee; 
     }
     .suggestion-video:hover { background: #f9f9f9; }
@@ -121,7 +121,7 @@ HTML_TEMPLATE = '''
             <img class=\"thumbnail\" src=\"${v.thumbnail}\" />
             <div class=\"info\"> 
               <strong>${v.title}</strong>
-              <em>${v.author}</em><br>
+              <em>${v.author}</em>
               <button onclick=\"download('${v.url}','mp3')\">MP3</button>
               <button onclick=\"download('${v.url}','mp4')\">MP4</button>
             </div>`;
@@ -143,8 +143,8 @@ HTML_TEMPLATE = '''
         const data = await res.json();
         if (!res.ok) { rndDiv.innerHTML = '<p>Gagal memuat saran.</p>'; return; }
         randomVideos = data;
-        renderRandom(randomVideos.length); // Tampilkan semua saran sekaligus
-        document.getElementById('load-more-btn').style.display = 'none'; // Sembunyikan tombol
+        renderRandom(randomVideos.length);
+        document.getElementById('load-more-btn').style.display = 'none';
       } catch {
         rndDiv.innerHTML = '<p>Error loading suggestions.</p>';
       }
@@ -157,8 +157,8 @@ HTML_TEMPLATE = '''
         dv.innerHTML = `
           <img class=\"suggestion-thumbnail\" src=\"${v.thumbnail}\" />
           <div class=\"suggestion-info\"> 
-            <strong>${v.title}</strong><br>
-            <em>${v.author}</em><br>
+            <strong>${v.title}</strong>
+            <em>${v.author}</em>
             <button onclick=\"download('${v.url}','mp3')\">MP3</button>
             <button onclick=\"download('${v.url}','mp4')\">MP4</button>
           </div>`;
