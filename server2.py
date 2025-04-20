@@ -22,7 +22,7 @@ HTML_TEMPLATE = '''
     h1 { text-align: center; margin-bottom: 20px; color: #333; }
     input[type="text"] { width: 100%; box-sizing: border-box; padding: 15px; font-size: 16px;
                            border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; }
-    button { padding: 12px 15px; font-size: 14px; margin: 10px 5px 15px 0; border: none; border-radius: 8px;
+    button { padding: 12px 20px; font-size: 14px; margin: 10px 5px 15px 0; border: none; border-radius: 8px;
              background-color: #007bff; color: white; cursor: pointer; }
     button:hover { background-color: #0056b3; }
     .video, .suggestion-video { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
