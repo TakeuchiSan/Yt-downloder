@@ -30,8 +30,8 @@ HTML_TEMPLATE = '''
     .thumbnail { width: 160px; height: 90px; border-radius: 6px; object-fit: cover; }
     .suggestion-thumbnail { width: 120px; height: 68px; border-radius: 6px; object-fit: cover; }
     .info, .suggestion-info { flex: 1; }
-    .info strong, .suggestion-info strong { font-size: 18px; display: block; margin-bottom: 5px; color: #333; line-height: 1.3; }
-    .info em, .suggestion-info em { color: #555; font-size: 14px; display: block; margin-bottom: 8px; }
+    .info strong, .suggestion-info strong { font-size: 12px; display: block; margin-bottom: 5px; color: #333; line-height: 1.3; }
+    .info em, .suggestion-info em { color: #555; font-size: 12px; display: block; margin-bottom: 8px; }
     .info button, .suggestion-info button { padding: 8px 12px; font-size: 14px; margin-right: 8px; }
     .search-status { font-style: italic; color: #555; font-size: 16px;
                      animation: pulse 1.2s infinite; margin-top: 10px; }
