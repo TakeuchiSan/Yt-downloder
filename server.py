@@ -25,19 +25,14 @@ HTML_TEMPLATE = '''
     button { padding: 12px 20px; font-size: 14px; margin: 10px 5px 15px 0; border: none; border-radius: 8px;
              background-color: #007bff; color: white; cursor: pointer; }
     button:hover { background-color: #0056b3; }
-    .video, .suggestion-video { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-    .video { border-bottom: 1px solid #eee; padding-bottom: 15px; }
+    .video { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid #eee; 
+             padding-bottom: 15px; }
     .thumbnail { width: 160px; height: 90px; border-radius: 6px; object-fit: cover; }
-    .suggestion-thumbnail { width: 120px; height: 68px; border-radius: 6px; object-fit: cover; }
-    .info, .suggestion-info {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-    }
-    .info strong, .suggestion-info strong { font-size: 14px; margin-bottom: 4px; color: #333; }
-    .info em, .suggestion-info em { font-size: 12px; color: #555; margin-bottom: 6px; }
-    .info button, .suggestion-info button { padding: 6px 10px; font-size: 12px; margin-right: 5px; }
+    .info { flex: 1; }
+    .info strong { font-size: 16px; color: #333; }
+    .info em { font-size: 12px; color: #555; margin-bottom: 6px; }
+    .buttons { display: flex; gap: 10px; margin-top: 10px; }
+    .buttons button { font-size: 14px; padding: 6px 12px; border-radius: 6px; }
     .search-status { font-style: italic; color: #555; font-size: 16px;
                      animation: pulse 1.2s infinite; margin-top: 10px; }
     @keyframes pulse { 0% { opacity: 0.2; } 50% { opacity: 1; } 100% { opacity: 0.2; } }
@@ -127,8 +122,10 @@ HTML_TEMPLATE = '''
             <div class="info"> 
               <strong>${v.title}</strong>
               <em>${v.author}</em>
-              <button onclick="download('${v.url}','mp3')">MP3</button>
-              <button onclick="download('${v.url}','mp4')">MP4</button>
+              <div class="buttons">
+                <button onclick="download('${v.url}','mp3')">MP3</button>
+                <button onclick="download('${v.url}','mp4')">MP4</button>
+              </div>
             </div>`;
           resDiv.appendChild(dv);
         });
@@ -164,8 +161,10 @@ HTML_TEMPLATE = '''
           <div class="suggestion-info"> 
             <strong>${v.title}</strong>
             <em>${v.author}</em>
-            <button onclick="download('${v.url}','mp3')">MP3</button>
-            <button onclick="download('${v.url}','mp4')">MP4</button>
+            <div class="buttons">
+              <button onclick="download('${v.url}','mp3')">MP3</button>
+              <button onclick="download('${v.url}','mp4')">MP4</button>
+            </div>
           </div>`;
         rndDiv.appendChild(dv);
       });
