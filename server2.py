@@ -25,14 +25,14 @@ HTML_TEMPLATE = '''
     button { padding: 12px 20px; font-size: 14px; margin: 10px 5px 15px 0; border: none; border-radius: 8px;
              background-color: #007bff; color: white; cursor: pointer; }
     button:hover { background-color: #0056b3; }
-    .video, .suggestion-video { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; }
-    .video { border-bottom: 1px solid #eee; padding-bottom: 15px; }
-    .thumbnail { width: 160px; height: 90px; border-radius: 6px; object-fit: cover; }
-    .suggestion-thumbnail { width: 120px; height: 68px; border-radius: 6px; object-fit: cover; }
-    .info, .suggestion-info { flex: 1; }
-    .info strong, .suggestion-info strong { font-size: 12px; display: block; margin-bottom: 5px; color: #333; line-height: 1.3; }
-    .info em, .suggestion-info em { color: #555; font-size: 14px; display: block; margin-bottom: 8px; }
-    .info button, .suggestion-info button { padding: 8px 12px; font-size: 14px; margin-right: 8px; }
+    .video { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid #eee; 
+             padding-bottom: 15px; }
+    .thumbnail { width: 120px; height: 80px; border-radius: 6px; object-fit: cover; }
+    .info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+    .info strong { font-size: 16px; color: #333; }
+    .info em { font-size: 12px; color: #555; margin-bottom: 6px; }
+    .buttons { display: flex; gap: 10px; margin-top: 10px; }
+    .buttons button { font-size: 14px; padding: 6px 12px; border-radius: 6px; }
     .search-status { font-style: italic; color: #555; font-size: 16px;
                      animation: pulse 1.2s infinite; margin-top: 10px; }
     @keyframes pulse { 0% { opacity: 0.2; } 50% { opacity: 1; } 100% { opacity: 0.2; } }
@@ -61,6 +61,7 @@ HTML_TEMPLATE = '''
       border-bottom: 1px solid #eee; 
     }
     .suggestion-video:hover { background: #f9f9f9; }
+    .suggestion-thumbnail { width: 120px; height: 80px; border-radius: 6px; object-fit: cover; }
     #load-more-btn { display: block; margin: 15px auto; padding: 10px 20px; font-size: 16px;
                      background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; }
     #load-more-btn:hover { background: #218838; }
@@ -75,9 +76,9 @@ HTML_TEMPLATE = '''
     <div id="suggestions" class="suggestions" style="display:none;"></div>
     <div id="results"></div>
 
-    <div class="random-suggestions">
+    <div class="random-suggestions" id="random-suggestions">
       <h2>Video Saran</h2>
-      <div id="random-suggestions"></div>
+      <div id="random-video-container"></div>
       <button id="load-more-btn" onclick="showAllSuggestions()" style="display:none;">Tampilkan Semua</button>
     </div>
   </div>
@@ -118,12 +119,14 @@ HTML_TEMPLATE = '''
         data.forEach(v => {
           const dv = document.createElement('div'); dv.className = 'video';
           dv.innerHTML = `
-            <img class=\"thumbnail\" src=\"${v.thumbnail}\" />
-            <div class=\"info\"> 
+            <img class="thumbnail" src="${v.thumbnail}" />
+            <div class="info"> 
               <strong>${v.title}</strong>
               <em>${v.author}</em>
-              <button onclick=\"download('${v.url}','mp3')\">MP3</button>
-              <button onclick=\"download('${v.url}','mp4')\">MP4</button>
+              <div class="buttons">
+                <button onclick="download('${v.url}','mp3')">MP3</button>
+                <button onclick="download('${v.url}','mp4')">MP4</button>
+              </div>
             </div>`;
           resDiv.appendChild(dv);
         });
@@ -137,7 +140,7 @@ HTML_TEMPLATE = '''
 
     let randomVideos = [];
     async function loadRandomSuggestions() {
-      const rndDiv = document.getElementById('random-suggestions');
+      const rndDiv = document.getElementById('random-video-container');
       try {
         const res = await fetch('/api/random_suggestions');
         const data = await res.json();
@@ -150,17 +153,19 @@ HTML_TEMPLATE = '''
       }
     }
     function renderRandom(count) {
-      const rndDiv = document.getElementById('random-suggestions');
+      const rndDiv = document.getElementById('random-video-container');
       rndDiv.innerHTML = '';
       randomVideos.slice(0, count).forEach(v => {
         const dv = document.createElement('div'); dv.className = 'suggestion-video';
         dv.innerHTML = `
-          <img class=\"suggestion-thumbnail\" src=\"${v.thumbnail}\" />
-          <div class=\"suggestion-info\"> 
+          <img class="suggestion-thumbnail" src="${v.thumbnail}" />
+          <div class="suggestion-info"> 
             <strong>${v.title}</strong>
             <em>${v.author}</em>
-            <button onclick=\"download('${v.url}','mp3')\">MP3</button>
-            <button onclick=\"download('${v.url}','mp4')\">MP4</button>
+            <div class="buttons">
+              <button onclick="download('${v.url}','mp3')">MP3</button>
+              <button onclick="download('${v.url}','mp4')">MP4</button>
+            </div>
           </div>`;
         rndDiv.appendChild(dv);
       });
