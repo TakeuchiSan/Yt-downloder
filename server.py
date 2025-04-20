@@ -27,7 +27,7 @@ HTML_TEMPLATE = '''
     button:hover { background-color: #0056b3; }
     .video { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid #eee; 
              padding-bottom: 15px; }
-    .thumbnail { width: 40px; height: 70px; border-radius: 6px; object-fit: cover; }
+    .thumbnail { width: 120px; height: 80px; border-radius: 6px; object-fit: cover; }
     .info { flex: 1; }
     .info strong { font-size: 16px; color: #333; }
     .info em { font-size: 12px; color: #555; margin-bottom: 6px; }
@@ -61,7 +61,7 @@ HTML_TEMPLATE = '''
       border-bottom: 1px solid #eee; 
     }
     .suggestion-video:hover { background: #f9f9f9; }
-    .suggestion-thumbnail { width: 40px; height: 70px; border-radius: 6px; object-fit: cover; }
+    .suggestion-thumbnail { width: 120px; height: 80px; border-radius: 6px; object-fit: cover; }
     #load-more-btn { display: block; margin: 15px auto; padding: 10px 20px; font-size: 16px;
                      background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; }
     #load-more-btn:hover { background: #218838; }
