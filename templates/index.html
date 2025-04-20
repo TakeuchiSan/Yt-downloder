@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>YouTube MP3/MP4 Downloader</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(to right, #f9f9f9, #e0e0e0);
+      padding: 30px;
+      max-width: 800px;
+      margin: auto;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+      color: #d32f2f;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 14px;
+      margin-bottom: 15px;
+      font-size: 17px;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+    }
+    button {
+      padding: 10px 18px;
+      font-size: 16px;
+      border: none;
+      border-radius: 6px;
+      background-color: #d32f2f;
+      color: white;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #b71c1c;
+    }
+    .video {
+      display: flex;
+      align-items: flex-start;
+      background: white;
+      padding: 15px;
+      margin-top: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    .thumbnail {
+      width: 140px;
+      height: auto;
+      margin-right: 15px;
+      border-radius: 8px;
+    }
+    .info {
+      flex: 1;
+    }
+    .info strong {
+      font-size: 18px;
+    }
+    .info em {
+      color: #777;
+    }
+    .info button {
+      margin-top: 10px;
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>YouTube Downloader</h1>
+  <input type="text" id="query" placeholder="Cari video YouTube..." />
+  <button onclick="search()">Cari</button>
+  <div id="results"></div>
+
+  <script>
+    async function search() {
+      const query = document.getElementById('query').value;
+      const resultsDiv = document.getElementById('results');
+      resultsDiv.innerHTML = '<p>Mencari...</p>';
+
+      try {
+        const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+        const data = await res.json();
+
+        if (res.status !== 200) {
+          resultsDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+          return;
+        }
+
+        resultsDiv.innerHTML = '';
+        data.forEach(video => {
+          const div = document.createElement('div');
+          div.className = 'video';
+          div.innerHTML = `
+            <img class="thumbnail" src="${video.thumbnail}" />
+            <div class="info">
+              <strong>${video.title}</strong><br>
+              <em>${video.author}</em><br>
+              <button onclick="download('${video.url}', 'mp3')">Download MP3</button>
+              <button onclick="download('${video.url}', 'mp4')">Download MP4</button>
+            </div>
+          `;
+          resultsDiv.appendChild(div);
+        });
+      } catch (err) {
+        resultsDiv.innerHTML = `<p>Error: ${err.message}</p>`;
+      }
+    }
+
+    function download(url, format) {
+      const a = document.createElement('a');
+      a.href = `/api/download?url=${encodeURIComponent(url)}&format=${format}`;
+      a.click();
+    }
+  </script>
+</body>
+</html>
