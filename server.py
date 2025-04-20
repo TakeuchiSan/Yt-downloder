@@ -21,8 +21,6 @@ HTML_TEMPLATE = '''
     .container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 12px;
                  box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     h1 { text-align: center; margin-bottom: 20px; color: #333; }
-    .logo { text-align: center; margin-bottom: 20px; }
-    .logo img { height: 80px; border-radius: 50%; }
     input[type="text"] { width: 100%; box-sizing: border-box; padding: 15px; font-size: 16px;
                            border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; }
     button { padding: 12px 20px; font-size: 14px; margin: 10px 5px 15px 0; border: none; border-radius: 8px;
@@ -44,67 +42,64 @@ HTML_TEMPLATE = '''
                    max-height: 300px; overflow-y: auto; }
     .suggestions div { padding: 8px; cursor: pointer; }
     .suggestions div:hover { background: #f1f1f1; }
-    .random-suggestions { 
-      border: 1px solid #ccc; 
-      padding: 15px; 
-      border-radius: 8px;
-      background: #fff; 
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1); 
-      margin-top: 25px;
-      max-height: none;
-      overflow-y: auto; 
-    }
-    #random-suggestions h2 { text-align: center; color: #333; margin-bottom: 15px; font-size: 24px; }
-    .suggestion-video { 
-      display: flex; 
-      align-items: center; 
-      gap: 12px; 
-      margin-bottom: 12px; 
-      padding: 10px; 
-      border-bottom: 1px solid #eee; 
-    }
-    .suggestion-video:hover { background: #f9f9f9; }
-    .suggestion-thumbnail { width: 120px; height: 80px; border-radius: 6px; object-fit: cover; }
-    #load-more-btn { display: block; margin: 15px auto; padding: 10px 20px; font-size: 16px;
-                     background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; }
-    #load-more-btn:hover { background: #218838; }
-    .contact-info {
-      margin-top: 30px;
-      padding-top: 20px;
-      border-top: 1px solid #eee;
+    
+    /* New Contact Info Styles */
+    .contact-section {
+      margin-top: 40px;
+      padding: 25px;
+      background: #f8f9fa;
+      border-radius: 10px;
       text-align: center;
     }
-    .contact-info h3 {
+    .contact-title {
+      font-size: 18px;
       margin-bottom: 15px;
       color: #333;
+      font-weight: 600;
     }
-    .contact-links {
-      display: flex;
-      justify-content: center;
-      gap: 20px;
-      flex-wrap: wrap;
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
     }
-    .contact-link {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      color: #555;
-      text-decoration: none;
-      transition: color 0.3s;
+    .contact-card {
+      padding: 15px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+      transition: transform 0.3s;
     }
-    .contact-link:hover {
+    .contact-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .contact-icon {
+      font-size: 24px;
+      margin-bottom: 10px;
       color: #007bff;
     }
-    .contact-link i {
-      font-size: 20px;
+    .contact-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 5px;
+    }
+    .contact-value {
+      font-size: 16px;
+      font-weight: 500;
+      color: #333;
+    }
+    .contact-link {
+      color: inherit;
+      text-decoration: none;
+    }
+    .contact-link:hover {
+      text-decoration: underline;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="logo">
-      <img src="https://via.placeholder.com/150/007bff/ffffff?text=YT" alt="YouTube Downloader Logo">
-    </div>
     <h1>YouTube Downloader</h1>
     <input type="text" id="query" placeholder="Masukkan judul atau link YouTube..." oninput="suggest()" />
     <button onclick="search()">Cari</button>
@@ -112,27 +107,30 @@ HTML_TEMPLATE = '''
     <div id="suggestions" class="suggestions" style="display:none;"></div>
     <div id="results"></div>
 
-    <div class="random-suggestions" id="random-suggestions" style="display: none;">
-      <h2>Video Saran</h2>
-      <div id="random-video-container"></div>
-      <button id="load-more-btn" onclick="showAllSuggestions()" style="display:none;">Tampilkan Semua</button>
-    </div>
-
-    <div class="contact-info">
-      <h3>Hubungi Kami</h3>
-      <div class="contact-links">
-        <a href="https://wa.me/6281234567890" class="contact-link" target="_blank">
-          <i class="fab fa-whatsapp"></i>
-          <span>+62 812-3456-7890</span>
-        </a>
-        <a href="mailto:support@ytdownloader.com" class="contact-link">
-          <i class="fas fa-envelope"></i>
-          <span>support@ytdownloader.com</span>
-        </a>
-        <a href="https://instagram.com/ytdownloader" class="contact-link" target="_blank">
-          <i class="fab fa-instagram"></i>
-          <span>@ytdownloader</span>
-        </a>
+    <div class="contact-section">
+      <div class="contact-title">Kontak Kami</div>
+      <div class="contact-grid">
+        <div class="contact-card">
+          <div class="contact-icon"><i class="fab fa-whatsapp"></i></div>
+          <div class="contact-label">WhatsApp</div>
+          <div class="contact-value">
+            <a href="https://wa.me/6281234567890" class="contact-link" target="_blank">+62 812-3456-7890</a>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon"><i class="fas fa-envelope"></i></div>
+          <div class="contact-label">Email</div>
+          <div class="contact-value">
+            <a href="mailto:support@example.com" class="contact-link">support@example.com</a>
+          </div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon"><i class="fab fa-instagram"></i></div>
+          <div class="contact-label">Instagram</div>
+          <div class="contact-value">
+            <a href="https://instagram.com/example" class="contact-link" target="_blank">@example</a>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -165,7 +163,6 @@ HTML_TEMPLATE = '''
       const q = document.getElementById('query').value;
       const resDiv = document.getElementById('results');
       resDiv.innerHTML = '<p class="search-status">Mencari...</p>';
-      document.getElementById('random-suggestions').style.display = 'none'; // Hide suggestions during search
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
         const data = await res.json();
@@ -192,48 +189,6 @@ HTML_TEMPLATE = '''
       a.href = `/api/download?url=${encodeURIComponent(url)}&format=${fmt}`;
       a.click();
     }
-
-    let randomVideos = [];
-    async function loadRandomSuggestions() {
-      const rndDiv = document.getElementById('random-video-container');
-      try {
-        const res = await fetch('/api/random_suggestions');
-        const data = await res.json();
-        if (!res.ok) { rndDiv.innerHTML = '<p>Gagal memuat saran.</p>'; return; }
-        randomVideos = data;
-        renderRandom(randomVideos.length);
-        document.getElementById('load-more-btn').style.display = 'none';
-      } catch {
-        rndDiv.innerHTML = '<p>Error loading suggestions.</p>';
-      }
-    }
-    function renderRandom(count) {
-      const rndDiv = document.getElementById('random-video-container');
-      rndDiv.innerHTML = '';
-      randomVideos.slice(0, count).forEach(v => {
-        const dv = document.createElement('div'); dv.className = 'suggestion-video';
-        dv.innerHTML = `
-          <img class="suggestion-thumbnail" src="${v.thumbnail}" />
-          <div class="suggestion-info"> 
-            <strong>${v.title}</strong>
-            <em>${v.author}</em>
-            <div class="buttons">
-              <button onclick="download('${v.url}','mp3')">MP3</button>
-              <button onclick="download('${v.url}','mp4')">MP4</button>
-            </div>
-          </div>`;
-        rndDiv.appendChild(dv);
-      });
-    }
-    function showAllSuggestions() {
-      renderRandom(randomVideos.length);
-      document.getElementById('load-more-btn').style.display = 'none';
-    }
-
-    window.onload = () => {
-      loadRandomSuggestions();
-      document.getElementById('random-suggestions').style.display = 'block'; // Show on homepage
-    };
   </script>
 </body>
 </html>
@@ -254,25 +209,6 @@ def suggest():
         return jsonify(titles)
     except Exception as e:
         return jsonify({ 'error': str(e) }), 500
-
-@app.route('/api/random_suggestions')
-def random_suggestions():
-    try:
-        query = 'music'
-        ydl_opts = { 'quiet': True, 'extract_flat': 'in_playlist', 'default_search': 'ytsearch10:' }
-        with YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(query, download=False)
-            entries = info.get('entries',[]) or []
-            results = [
-                {'id': v.get('id'), 'title': v.get('title','Tanpa judul'),
-                 'url': v.get('url'), 'thumbnail': v.get('thumbnails',[{}])[-1].get('url'),
-                 'author': v.get('uploader','Unknown')} for v in entries if v
-            ]
-        random.shuffle(results)
-        return jsonify(results)
-    except Exception as e:
-        app.logger.error(f"Error random: {e}")
-        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/search')
 def search():
