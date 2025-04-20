@@ -38,6 +38,7 @@ HTML_TEMPLATE = '''
     }
     input[type="text"] {
       width: 100%;
+      box-sizing: border-box;
       padding: 15px;
       font-size: 16px;
       border: 1px solid #ccc;
@@ -81,6 +82,17 @@ HTML_TEMPLATE = '''
       color: #777;
       font-size: 14px;
     }
+    .search-status {
+      font-style: italic;
+      color: #555;
+      font-size: 16px;
+      animation: pulse 1.2s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 0.2; }
+      50% { opacity: 1; }
+      100% { opacity: 0.2; }
+    }
   </style>
 </head>
 <body>
@@ -95,7 +107,7 @@ HTML_TEMPLATE = '''
     async function search() {
       const query = document.getElementById('query').value;
       const resultsDiv = document.getElementById('results');
-      resultsDiv.innerHTML = '<p>Mencari...</p>';
+      resultsDiv.innerHTML = '<p class="search-status">Mencari...</p>';
 
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
