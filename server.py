@@ -27,7 +27,7 @@ HTML_TEMPLATE = '''
     button:hover { background-color: #0056b3; }
     .video { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid #eee; 
              padding-bottom: 15px; }
-    .thumbnail { width: 160px; height: 90px; border-radius: 6px; object-fit: cover; }
+    .thumbnail { width: 50px; height: 90px; border-radius: 6px; object-fit: cover; }
     .info { flex: 1; }
     .info strong { font-size: 16px; color: #333; }
     .info em { font-size: 12px; color: #555; margin-bottom: 6px; }
