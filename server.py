@@ -26,14 +26,6 @@ HTML_TEMPLATE = '''
     button { padding: 12px 20px; font-size: 14px; margin: 10px 5px 15px 0; border: none; border-radius: 8px;
              background-color: #007bff; color: white; cursor: pointer; }
     button:hover { background-color: #0056b3; }
-    .video { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid #eee; 
-             padding-bottom: 15px; }
-    .thumbnail { width: 120px; height: 80px; border-radius: 6px; object-fit: cover; }
-    .info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
-    .info strong { font-size: 16px; color: #333; }
-    .info em { font-size: 12px; color: #555; margin-bottom: 6px; }
-    .buttons { display: flex; gap: 10px; margin-top: 10px; }
-    .buttons button { font-size: 14px; padding: 6px 12px; border-radius: 6px; }
     .search-status { font-style: italic; color: #555; font-size: 16px;
                      animation: pulse 1.2s infinite; margin-top: 10px; }
     @keyframes pulse { 0% { opacity: 0.2; } 50% { opacity: 1; } 100% { opacity: 0.2; } }
@@ -42,11 +34,8 @@ HTML_TEMPLATE = '''
                    max-height: 300px; overflow-y: auto; }
     .suggestions div { padding: 8px; cursor: pointer; }
     .suggestions div:hover { background: #f1f1f1; }
-    
-    /* New Horizontal Video Suggestions */
-    .video-suggestions {
-      margin-top: 30px;
-    }
+
+    .video-suggestions, .search-results { margin-top: 30px; }
     .video-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
@@ -94,8 +83,6 @@ HTML_TEMPLATE = '''
       padding: 5px;
       font-size: 12px;
     }
-    
-    /* Contact Info Styles */
     .contact-section {
       margin-top: 40px;
       padding: 25px;
@@ -126,17 +113,18 @@ HTML_TEMPLATE = '''
       color: #007bff;
       text-align: center;
     }
+    .contact-label, .contact-value {
+      text-align: center;
+    }
     .contact-label {
       font-size: 14px;
       color: #666;
       margin-bottom: 5px;
-      text-align: center;
     }
     .contact-value {
       font-size: 16px;
       font-weight: 500;
       color: #333;
-      text-align: center;
     }
     .contact-link {
       color: inherit;
@@ -151,14 +139,12 @@ HTML_TEMPLATE = '''
     <button onclick="search()">Cari</button>
 
     <div id="suggestions" class="suggestions" style="display:none;"></div>
-    <div id="results"></div>
+    <div class="search-results" id="results"></div>
 
-    <!-- Video Suggestions Section -->
     <div class="video-suggestions">
       <div class="video-grid" id="random-video-container"></div>
     </div>
 
-    <!-- Contact Info Section -->
     <div class="contact-section">
       <div class="contact-title">Kontak Kami</div>
       <div class="contact-grid">
@@ -187,93 +173,95 @@ HTML_TEMPLATE = '''
     </div>
   </div>
 
-  <script>
-    let suggestTimeout;
-    function suggest() {
-      clearTimeout(suggestTimeout);
-      const q = document.getElementById('query').value;
-      const sugDiv = document.getElementById('suggestions');
-      if (q.length < 3) { sugDiv.style.display = 'none'; return; }
-      suggestTimeout = setTimeout(async () => {
-        try {
-          const res = await fetch(`/api/suggest?q=${encodeURIComponent(q)}`);
-          const data = await res.json();
-          if (res.ok) {
-            sugDiv.innerHTML = data.map(item => `<div onclick="pickSuggest('${item.replace(/'/g, "\\'")}')">${item}</div>`).join('');
-            sugDiv.style.display = 'block';
-          }
-        } catch (e) { console.error(e); }
-      }, 300);
-    }
-    function pickSuggest(val) {
-      document.getElementById('query').value = val;
-      document.getElementById('suggestions').style.display = 'none';
-      search();
-    }
-    async function search() {
-      document.getElementById('suggestions').style.display = 'none';
-      const q = document.getElementById('query').value;
-      const resDiv = document.getElementById('results');
-      resDiv.innerHTML = '<p class="search-status">Mencari...</p>';
+<script>
+  let suggestTimeout;
+  function suggest() {
+    clearTimeout(suggestTimeout);
+    const q = document.getElementById('query').value;
+    const sugDiv = document.getElementById('suggestions');
+    if (q.length < 3) { sugDiv.style.display = 'none'; return; }
+    suggestTimeout = setTimeout(async () => {
       try {
-        const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+        const res = await fetch(`/api/suggest?q=${encodeURIComponent(q)}`);
         const data = await res.json();
-        if (!res.ok) return resDiv.innerHTML = `<p>Error: ${data.error}</p>`;
-        resDiv.innerHTML = '';
-        data.forEach(v => {
-          const dv = document.createElement('div'); dv.className = 'video';
-          dv.innerHTML = `
-            <img class="thumbnail" src="${v.thumbnail}" />
-            <div class="info"> 
-              <strong>${v.title}</strong>
-              <em>${v.author}</em>
-              <div class="buttons">
-                <button onclick="download('${v.url}','mp3')">MP3</button>
-                <button onclick="download('${v.url}','mp4')">MP4</button>
-              </div>
-            </div>`;
-          resDiv.appendChild(dv);
-        });
-      } catch (e) { resDiv.innerHTML = `<p>Error: ${e.message}</p>`; }
-    }
-    function download(url, fmt) {
-      const a = document.createElement('a');
-      a.href = `/api/download?url=${encodeURIComponent(url)}&format=${fmt}`;
-      a.click();
-    }
+        if (res.ok) {
+          sugDiv.innerHTML = data.map(item => `<div onclick="pickSuggest('${item.replace(/'/g, "\\'")}')">${item}</div>`).join('');
+          sugDiv.style.display = 'block';
+        }
+      } catch (e) { console.error(e); }
+    }, 300);
+  }
 
-    // Load random suggestions on page load
-    async function loadRandomSuggestions() {
-      const container = document.getElementById('random-video-container');
-      try {
-        const res = await fetch('/api/random_suggestions');
-        const data = await res.json();
-        if (!res.ok) return;
-        
-        container.innerHTML = '';
-        data.forEach(video => {
-          const card = document.createElement('div');
-          card.className = 'suggestion-card';
-          card.innerHTML = `
-            <img class="suggestion-thumbnail" src="${video.thumbnail}" />
-            <div class="suggestion-details">
-              <div class="suggestion-title">${video.title}</div>
-              <div class="suggestion-author">${video.author}</div>
-              <div class="suggestion-buttons">
-                <button onclick="download('${video.url}','mp3')">MP3</button>
-                <button onclick="download('${video.url}','mp4')">MP4</button>
-              </div>
+  function pickSuggest(val) {
+    document.getElementById('query').value = val;
+    document.getElementById('suggestions').style.display = 'none';
+    search();
+  }
+
+  async function search() {
+    document.getElementById('suggestions').style.display = 'none';
+    const q = document.getElementById('query').value;
+    const resDiv = document.getElementById('results');
+    resDiv.innerHTML = '<p class="search-status">Mencari...</p>';
+    try {
+      const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      if (!res.ok) return resDiv.innerHTML = `<p>Error: ${data.error}</p>`;
+      resDiv.innerHTML = '<div class="video-grid" id="search-results-grid"></div>';
+      const grid = document.getElementById('search-results-grid');
+      data.forEach(video => {
+        const card = document.createElement('div');
+        card.className = 'suggestion-card';
+        card.innerHTML = `
+          <img class="suggestion-thumbnail" src="${video.thumbnail}" />
+          <div class="suggestion-details">
+            <div class="suggestion-title">${video.title}</div>
+            <div class="suggestion-author">${video.author}</div>
+            <div class="suggestion-buttons">
+              <button onclick="download('${video.url}','mp3')">MP3</button>
+              <button onclick="download('${video.url}','mp4')">MP4</button>
             </div>
-          `;
-          container.appendChild(card);
-        });
-      } catch (e) {
-        console.error('Error loading suggestions:', e);
-      }
-    }
+          </div>`;
+        grid.appendChild(card);
+      });
+    } catch (e) { resDiv.innerHTML = `<p>Error: ${e.message}</p>`; }
+  }
 
-    window.onload = loadRandomSuggestions;
-  </script>
+  function download(url, fmt) {
+    const a = document.createElement('a');
+    a.href = `/api/download?url=${encodeURIComponent(url)}&format=${fmt}`;
+    a.click();
+  }
+
+  async function loadRandomSuggestions() {
+    const container = document.getElementById('random-video-container');
+    try {
+      const res = await fetch('/api/random_suggestions');
+      const data = await res.json();
+      if (!res.ok) return;
+      container.innerHTML = '';
+      data.forEach(video => {
+        const card = document.createElement('div');
+        card.className = 'suggestion-card';
+        card.innerHTML = `
+          <img class="suggestion-thumbnail" src="${video.thumbnail}" />
+          <div class="suggestion-details">
+            <div class="suggestion-title">${video.title}</div>
+            <div class="suggestion-author">${video.author}</div>
+            <div class="suggestion-buttons">
+              <button onclick="download('${video.url}','mp3')">MP3</button>
+              <button onclick="download('${video.url}','mp4')">MP4</button>
+            </div>
+          </div>`;
+        container.appendChild(card);
+      });
+    } catch (e) {
+      console.error('Error loading suggestions:', e);
+    }
+  }
+
+  window.onload = loadRandomSuggestions;
+</script>
 </body>
 </html>
 '''
@@ -308,7 +296,7 @@ def random_suggestions():
                  'author': v.get('uploader','Unknown')} for v in entries if v
             ]
         random.shuffle(results)
-        return jsonify(results[:12])  # Return max 12 videos
+        return jsonify(results[:12])
     except Exception as e:
         app.logger.error(f"Error random: {e}")
         return jsonify({'error': str(e)}), 500
