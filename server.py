@@ -28,7 +28,7 @@ HTML_TEMPLATE = '''
     .video { display: flex; align-items: center; gap: 15px; margin-bottom: 15px; border-bottom: 1px solid #eee; 
              padding-bottom: 15px; }
     .thumbnail { width: 120px; height: 80px; border-radius: 6px; object-fit: cover; }
-    .info { flex: 1; }
+    .info { flex: 1; display: flex; flex-direction: column; justify-content: center; }
     .info strong { font-size: 16px; color: #333; }
     .info em { font-size: 12px; color: #555; margin-bottom: 6px; }
     .buttons { display: flex; gap: 10px; margin-top: 10px; }
