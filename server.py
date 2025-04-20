@@ -15,11 +15,14 @@ HTML_TEMPLATE = '''
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>YouTube MP3/MP4 Downloader</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
     .container { max-width: 900px; margin: auto; background: #fff; padding: 30px; border-radius: 12px;
                  box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
     h1 { text-align: center; margin-bottom: 20px; color: #333; }
+    .logo { text-align: center; margin-bottom: 20px; }
+    .logo img { height: 80px; border-radius: 50%; }
     input[type="text"] { width: 100%; box-sizing: border-box; padding: 15px; font-size: 16px;
                            border: 1px solid #ccc; border-radius: 8px; margin-bottom: 10px; }
     button { padding: 12px 20px; font-size: 14px; margin: 10px 5px 15px 0; border: none; border-radius: 8px;
@@ -65,10 +68,43 @@ HTML_TEMPLATE = '''
     #load-more-btn { display: block; margin: 15px auto; padding: 10px 20px; font-size: 16px;
                      background: #28a745; color: white; border: none; border-radius: 6px; cursor: pointer; }
     #load-more-btn:hover { background: #218838; }
+    .contact-info {
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+      text-align: center;
+    }
+    .contact-info h3 {
+      margin-bottom: 15px;
+      color: #333;
+    }
+    .contact-links {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+    .contact-link {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #555;
+      text-decoration: none;
+      transition: color 0.3s;
+    }
+    .contact-link:hover {
+      color: #007bff;
+    }
+    .contact-link i {
+      font-size: 20px;
+    }
   </style>
 </head>
 <body>
   <div class="container">
+    <div class="logo">
+      <img src="https://via.placeholder.com/150/007bff/ffffff?text=YT" alt="YouTube Downloader Logo">
+    </div>
     <h1>YouTube Downloader</h1>
     <input type="text" id="query" placeholder="Masukkan judul atau link YouTube..." oninput="suggest()" />
     <button onclick="search()">Cari</button>
@@ -76,10 +112,28 @@ HTML_TEMPLATE = '''
     <div id="suggestions" class="suggestions" style="display:none;"></div>
     <div id="results"></div>
 
-    <div class="random-suggestions">
+    <div class="random-suggestions" id="random-suggestions" style="display: none;">
       <h2>Video Saran</h2>
-      <div id="random-suggestions"></div>
+      <div id="random-video-container"></div>
       <button id="load-more-btn" onclick="showAllSuggestions()" style="display:none;">Tampilkan Semua</button>
+    </div>
+
+    <div class="contact-info">
+      <h3>Hubungi Kami</h3>
+      <div class="contact-links">
+        <a href="https://wa.me/6281234567890" class="contact-link" target="_blank">
+          <i class="fab fa-whatsapp"></i>
+          <span>+62 812-3456-7890</span>
+        </a>
+        <a href="mailto:support@ytdownloader.com" class="contact-link">
+          <i class="fas fa-envelope"></i>
+          <span>support@ytdownloader.com</span>
+        </a>
+        <a href="https://instagram.com/ytdownloader" class="contact-link" target="_blank">
+          <i class="fab fa-instagram"></i>
+          <span>@ytdownloader</span>
+        </a>
+      </div>
     </div>
   </div>
 
@@ -111,6 +165,7 @@ HTML_TEMPLATE = '''
       const q = document.getElementById('query').value;
       const resDiv = document.getElementById('results');
       resDiv.innerHTML = '<p class="search-status">Mencari...</p>';
+      document.getElementById('random-suggestions').style.display = 'none'; // Hide suggestions during search
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
         const data = await res.json();
@@ -140,7 +195,7 @@ HTML_TEMPLATE = '''
 
     let randomVideos = [];
     async function loadRandomSuggestions() {
-      const rndDiv = document.getElementById('random-suggestions');
+      const rndDiv = document.getElementById('random-video-container');
       try {
         const res = await fetch('/api/random_suggestions');
         const data = await res.json();
@@ -153,7 +208,7 @@ HTML_TEMPLATE = '''
       }
     }
     function renderRandom(count) {
-      const rndDiv = document.getElementById('random-suggestions');
+      const rndDiv = document.getElementById('random-video-container');
       rndDiv.innerHTML = '';
       randomVideos.slice(0, count).forEach(v => {
         const dv = document.createElement('div'); dv.className = 'suggestion-video';
@@ -175,7 +230,10 @@ HTML_TEMPLATE = '''
       document.getElementById('load-more-btn').style.display = 'none';
     }
 
-    window.onload = () => loadRandomSuggestions();
+    window.onload = () => {
+      loadRandomSuggestions();
+      document.getElementById('random-suggestions').style.display = 'block'; // Show on homepage
+    };
   </script>
 </body>
 </html>
