@@ -76,7 +76,7 @@ HTML_TEMPLATE = '''
     <div id="suggestions" class="suggestions" style="display:none;"></div>
     <div id="results"></div>
 
-    <div class="random-suggestions" id="random-suggestions">
+    <div class="random-suggestions" id="random-suggestions" style="display: none;">
       <h2>Video Saran</h2>
       <div id="random-video-container"></div>
       <button id="load-more-btn" onclick="showAllSuggestions()" style="display:none;">Tampilkan Semua</button>
@@ -111,6 +111,7 @@ HTML_TEMPLATE = '''
       const q = document.getElementById('query').value;
       const resDiv = document.getElementById('results');
       resDiv.innerHTML = '<p class="search-status">Mencari...</p>';
+      document.getElementById('random-suggestions').style.display = 'none'; // Hide suggestions during search
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
         const data = await res.json();
@@ -175,7 +176,10 @@ HTML_TEMPLATE = '''
       document.getElementById('load-more-btn').style.display = 'none';
     }
 
-    window.onload = () => loadRandomSuggestions();
+    window.onload = () => {
+      loadRandomSuggestions();
+      document.getElementById('random-suggestions').style.display = 'block'; // Show on homepage
+    };
   </script>
 </body>
 </html>
