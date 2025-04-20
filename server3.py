@@ -25,22 +25,22 @@ HTML_TEMPLATE = '''
     button { padding: 10px 18px; font-size: 16px; margin: 10px 0; border: none; border-radius: 8px;
              background-color: #007bff; color: white; cursor: pointer; }
     button:hover { background-color: #0056b3; }
-    .video { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px;
-             border-bottom: 1px solid #eee; padding-bottom: 10px; }
+    .video, .suggestion-video { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 20px; }
+    .video { border-bottom: 1px solid #eee; padding-bottom: 10px; }
     .thumbnail { width: 160px; border-radius: 6px; }
-    .info { flex: 1; }
-    .info strong { font-size: 18px; display: block; margin-bottom: 5px; }
-    .info em { color: #777; font-size: 14px; }
+    .suggestion-thumbnail { width: 120px; height: 90px; border-radius: 6px; }
+    .info, .suggestion-info { flex: 1; }
+    .info strong, .suggestion-info strong { font-size: 18px; display: block; margin-bottom: 5px; }
+    .info em, .suggestion-info em { color: #777; font-size: 14px; }
     .search-status { font-style: italic; color: #555; font-size: 16px;
                      animation: pulse 1.2s infinite; margin-top: 10px; }
     .suggestions, .random-suggestions { border: 1px solid #ccc; padding: 10px; border-radius: 8px;
                    background: #fff; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 20px;
                    max-height: 200px; overflow-y: auto; }
-    .suggestions div, .random-suggestions .suggestion-video { padding: 5px; cursor: pointer; }
-    .suggestions div:hover, .random-suggestions .suggestion-video:hover { background: #f1f1f1; }
-    .random-suggestions h2 { text-align: center; color: #333; margin-bottom: 10px; }
-    .suggestion-video { display: flex; align-items: center; gap: 15px; margin-bottom: 10px; }
-    .suggestion-thumbnail { width: 120px; height: 90px; border-radius: 6px; }
+    .suggestions div, #random-suggestions div { padding: 5px; cursor: pointer; }
+    .suggestions div:hover, #random-suggestions div:hover { background: #f1f1f1; }
+    #random-suggestions h2 { text-align: center; color: #333; margin-bottom: 10px; }
+    #load-more-btn { display: block; margin: 10px auto; }
     @keyframes pulse { 0% { opacity: 0.2; } 50% { opacity: 1; } 100% { opacity: 0.2; } }
   </style>
 </head>
@@ -56,6 +56,7 @@ HTML_TEMPLATE = '''
     <div class="random-suggestions">
       <h2>Video Saran</h2>
       <div id="random-suggestions"></div>
+      <button id="load-more-btn" onclick="showAllSuggestions()" style="display:none;">Tampilkan Semua</button>
     </div>
   </div>
 
@@ -112,30 +113,43 @@ HTML_TEMPLATE = '''
       a.click();
     }
 
+    let randomVideos = [];
     async function loadRandomSuggestions() {
       const rndDiv = document.getElementById('random-suggestions');
       try {
         const res = await fetch('/api/random_suggestions');
         const data = await res.json();
         if (!res.ok) { rndDiv.innerHTML = '<p>Gagal memuat saran.</p>'; return; }
-        rndDiv.innerHTML = '';
-        data.forEach(v => {
-          const dv = document.createElement('div'); dv.className = 'suggestion-video';
-          dv.innerHTML = `
-            <img class=\"suggestion-thumbnail\" src=\"${v.thumbnail}\" />
-            <div class=\"suggestion-info\"> 
-              <strong>${v.title}</strong><br>
-              <em>${v.author}</em><br>
-              <button onclick=\"download('${v.url}','mp3')\">MP3</button>
-              <button onclick=\"download('${v.url}','mp4')\">MP4</button>
-            </div>`;
-          rndDiv.appendChild(dv);
-        });
+        randomVideos = data;
+        renderRandom(3);
+        if (randomVideos.length > 3) {
+          document.getElementById('load-more-btn').style.display = 'block';
+        }
       } catch {
         rndDiv.innerHTML = '<p>Error loading suggestions.</p>';
       }
     }
-    // load random suggestions on page load
+    function renderRandom(count) {
+      const rndDiv = document.getElementById('random-suggestions');
+      rndDiv.innerHTML = '';
+      randomVideos.slice(0, count).forEach(v => {
+        const dv = document.createElement('div'); dv.className = 'suggestion-video';
+        dv.innerHTML = `
+          <img class=\"suggestion-thumbnail\" src=\"${v.thumbnail}\" />
+          <div class=\"suggestion-info\"> 
+            <strong>${v.title}</strong><br>
+            <em>${v.author}</em><br>
+            <button onclick=\"download('${v.url}','mp3')\">MP3</button>
+            <button onclick=\"download('${v.url}','mp4')\">MP4</button>
+          </div>`;
+        rndDiv.appendChild(dv);
+      });
+    }
+    function showAllSuggestions() {
+      renderRandom(randomVideos.length);
+      document.getElementById('load-more-btn').style.display = 'none';
+    }
+
     window.onload = () => loadRandomSuggestions();
   </script>
 </body>
@@ -143,14 +157,12 @@ HTML_TEMPLATE = '''
 '''
 
 @app.route('/')
-def index():
-    return render_template_string(HTML_TEMPLATE)
+def index(): return render_template_string(HTML_TEMPLATE)
 
 @app.route('/api/suggest')
 def suggest():
     q = request.args.get('q')
-    if not q:
-        return jsonify({ 'error': "Parameter 'q' diperlukan" }), 400
+    if not q: return jsonify({ 'error': "Parameter 'q' diperlukan" }), 400
     try:
         ydl_opts = { 'quiet': True, 'extract_flat': 'in_playlist', 'default_search': 'ytsearch5:' }
         with YoutubeDL(ydl_opts) as ydl:
@@ -173,8 +185,8 @@ def random_suggestions():
                  'url': v.get('url'), 'thumbnail': v.get('thumbnails',[{}])[-1].get('url'),
                  'author': v.get('uploader','Unknown')} for v in entries if v
             ]
-        sample = random.sample(results, 3) if len(results)>=3 else results
-        return jsonify(sample)
+        random.shuffle(results)
+        return jsonify(results)
     except Exception as e:
         app.logger.error(f"Error random: {e}")
         return jsonify({'error': str(e)}), 500
@@ -182,8 +194,7 @@ def random_suggestions():
 @app.route('/api/search')
 def search():
     q = request.args.get('q')
-    if not q:
-        return jsonify({ 'error': "Parameter 'q' diperlukan" }), 400
+    if not q: return jsonify({ 'error': "Parameter 'q' diperlukan" }), 400
     try:
         app.logger.info(f"Mencari video: {q}")
         ydl_opts = { 'quiet': True, 'extract_flat': 'in_playlist', 'default_search': 'ytsearch10:' }
@@ -203,8 +214,7 @@ def search():
 def download_file():
     url = request.args.get('url')
     fmt = request.args.get('format','mp4')
-    if not url:
-        return jsonify({ 'error': "Parameter 'url' diperlukan" }), 400
+    if not url: return jsonify({ 'error': "Parameter 'url' diperlukan" }), 400
     try:
         app.logger.info(f"Downloading: {url} as {fmt}")
         ydl_opts = {
